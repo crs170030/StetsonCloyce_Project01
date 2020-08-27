@@ -11,16 +11,32 @@ public class PlayerShip : MonoBehaviour
     [SerializeField] float _turnSpeed = 3f;
 
     Rigidbody _rb = null;
+    ParticleSystem fireLeft = null;
+    bool postToggle = true;
 
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
+        fireLeft = GetComponent<ParticleSystem>();
     }
 
     void FixedUpdate()
     {
         MoveShip();
         TurnShip();
+
+        //duplicate fire particle for dual engine action!
+        var fireLeftShape = fireLeft.shape;
+        if (postToggle)
+        {
+            fireLeftShape.position = new Vector3(.65f, .5f, -2f);
+            postToggle = false;
+        }
+        else
+        {
+            fireLeftShape.position = new Vector3(-.65f, .5f, -2f);
+            postToggle = true;
+        }
     }
 
     void MoveShip()
@@ -31,6 +47,25 @@ public class PlayerShip : MonoBehaviour
         Vector3 moveDirection = transform.forward * moveAmountThisFrame;
         //apply movement to the physics object
         _rb.AddForce(moveDirection);
+
+        //change fire particle on keypress
+        switch (Input.GetAxisRaw("Vertical"))
+        {
+            case 1:
+                Reverse(false);
+                BlastEngines(true);
+                break;
+
+            case -1:
+                BlastEngines(false);
+                Reverse(true);
+                break;
+
+            default:
+                BlastEngines(false);
+                Reverse(false);
+                break;
+        }
     }
 
     void TurnShip()
@@ -47,5 +82,35 @@ public class PlayerShip : MonoBehaviour
     {
         Debug.Log("Player died a clumsy and painful death.");
         this.gameObject.SetActive(false);
+    }
+
+    void BlastEngines(bool blast)
+    {
+        var fireLeftShape = fireLeft.shape;
+        if (blast)
+        {
+            //Debug.Log("fire engines");
+            //fireLeftShape.radius = 4f;
+            fireLeftShape.scale = new Vector3(2.5f, 0.2f, 10f);
+        }
+        else
+        {
+            //fireLeftShape.radius = 1f;
+            fireLeftShape.scale = new Vector3(0.2f, 0.2f, 10f);
+        }
+    }
+    void Reverse(bool blastnt)
+    {
+        
+        if (blastnt)
+        {
+            //fireLeft.startSize = 0f;
+            fireLeft.Stop();
+        }
+        else
+        {
+            //fireLeft.startSize = .7f;
+            fireLeft.Play();
+        }
     }
 }

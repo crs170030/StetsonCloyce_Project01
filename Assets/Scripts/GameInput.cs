@@ -8,9 +8,18 @@ public class GameInput : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //Backspace: Restart Level
         if (Input.GetKeyDown(KeyCode.Backspace))
         {
+            Debug.Log("Cover me, Reloading level!");
             ReloadLevel();
+        }
+
+        /////ESC: Exit the program
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Debug.Log("Escape was pressed");
+            Application.Quit();
         }
     }
 
