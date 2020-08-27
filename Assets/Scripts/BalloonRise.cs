@@ -10,6 +10,6 @@ public class BalloonRise : MonoBehaviour
     void Update()
     {
         //balloon.Position += Vector3.up * 5f;
-        balloon.transform.Translate(Time.deltaTime * transform.up * 0.5f);
+        balloon.transform.Translate(Time.deltaTime * transform.up * 0.25f);
     }
 }
