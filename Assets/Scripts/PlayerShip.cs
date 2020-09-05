@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class PlayerShip : MonoBehaviour
 {
+    ShieldController _shield;
 
     [SerializeField] float _moveSpeed = 12f;
     [SerializeField] float _turnSpeed = 3f;
@@ -16,6 +17,8 @@ public class PlayerShip : MonoBehaviour
 
     private void Awake()
     {
+        _shield = FindObjectOfType<ShieldController>();
+
         _rb = GetComponent<Rigidbody>();
         fireLeft = GetComponent<ParticleSystem>();
     }
@@ -84,6 +87,7 @@ public class PlayerShip : MonoBehaviour
         this.gameObject.SetActive(false);
     }
 
+    //Fire Graphics
     void BlastEngines(bool blast)
     {
         var fireLeftShape = fireLeft.shape;
@@ -99,18 +103,24 @@ public class PlayerShip : MonoBehaviour
             fireLeftShape.scale = new Vector3(0.2f, 0.2f, 10f);
         }
     }
+
     void Reverse(bool blastnt)
     {
-        
         if (blastnt)
         {
-            //fireLeft.startSize = 0f;
             fireLeft.Stop();
         }
         else
         {
-            //fireLeft.startSize = .7f;
             fireLeft.Play();
         }
+    }
+
+    /////////////////////////Powerups
+    //Shield
+    public void ShieldUp()
+    {
+        Debug.Log("Shield On!!");
+        _shield.TurnOn(true);
     }
 }
