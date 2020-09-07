@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class HazardVolume : MonoBehaviour
 {
+
     private void OnTriggerEnter(Collider other)
     {
         //detect if it's the player
@@ -13,7 +14,7 @@ public class HazardVolume : MonoBehaviour
         if(playerShip != null)
         {
             //murdertime epic
-            playerShip.Kill();
+            playerShip.Kill(true);
         }
     }
 }

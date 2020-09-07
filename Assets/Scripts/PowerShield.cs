@@ -5,6 +5,12 @@ using UnityEngine;
 public class PowerShield : MonoBehaviour
 {
     [SerializeField] float speeen = 0.6f;
+    private CapsuleCollider _hitbox;
+
+    void Awake()
+    {
+        _hitbox = GetComponent<CapsuleCollider>();
+    }
 
     // Update is called once per frame
     void Update()
@@ -24,10 +30,11 @@ public class PowerShield : MonoBehaviour
         {
             Debug.Log("Boosting Shields");
             //call player function which calls to activate shield object and script
-            player.ShieldUp();
+            player.ShieldUp(true);
 
             //make powerup go away
             this.gameObject.SetActive(false);
+            _hitbox.enabled = !_hitbox.enabled;
         }
     }
 }

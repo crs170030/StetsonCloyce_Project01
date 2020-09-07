@@ -5,6 +5,20 @@ using UnityEngine.SceneManagement;
 
 public class GameInput : MonoBehaviour
 {
+    CameraFollow _camera;  //camera reference to stop music
+
+    public AudioClip explode;
+    public AudioSource _audioPlayer;
+    bool playExplode = false;
+
+    void Awake()
+    {
+        _camera = FindObjectOfType<CameraFollow>();
+        _audioPlayer = GetComponent<AudioSource>();
+        if (_audioPlayer == null)
+            _audioPlayer = gameObject.AddComponent<AudioSource>();
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -21,11 +35,26 @@ public class GameInput : MonoBehaviour
             Debug.Log("Escape was pressed");
             Application.Quit();
         }
+
+        if (playExplode)
+        {
+            playExplode = false;
+            _audioPlayer.PlayOneShot(explode, 1f);
+        }
     }
 
     void ReloadLevel()
     {
         int activeSceneIndex = SceneManager.GetActiveScene().buildIndex;
         SceneManager.LoadScene(activeSceneIndex);
+    }
+
+    public void GameOver()
+    {
+        Debug.Log("Game Over!");
+        _camera.StopMusic();
+        playExplode = true;
+
+        //Add game over text + score
     }
 }
