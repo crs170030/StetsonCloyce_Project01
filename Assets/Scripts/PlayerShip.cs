@@ -8,14 +8,16 @@ using UnityEngine;
 ///V    Make Powerup go away     
 ///V    Add powerup functionality
 ///V    Make Audio Feedback for Powerup
-///Make Second Powerup (Double Speed?)
+///V    Make Second Powerup (Double Speed?)
 ///V    Add Death State
-///Make Player Respawn after 2 seconds
-///Make Win Condition
+///V    Make Player Respawn after 2 seconds
+///V    Have Sheild Bounce player off of dangers?(make die cube not a trigger)
+///V    (make script in ship to add a large negative force to player?)
+///V    Make Win Condition
 ///---------------Extra -------------------------
-///Make Player Explode upon death
-///customize game. (Add lazers and rotating planets?)
-///Level Design (place power ups and obstacles)
+///V    Make Player Explode upon death
+///X    customize game. (Add lazers and rotating planets?)
+///V    Level Design (place power ups and obstacles)
 
 public class PlayerShip : MonoBehaviour
 {
@@ -27,20 +29,32 @@ public class PlayerShip : MonoBehaviour
 
     [SerializeField] float _moveSpeed = 12f;
     [SerializeField] float _turnSpeed = 3f;
+
     [SerializeField] float _hitRadius = 2f;
     [SerializeField] float _hitHeight = 6.5f;
     [SerializeField] float _hitRound = 4.5f;
 
+    [SerializeField] float _spUpAmount = 2f;
+    [SerializeField] float _blowBack = 1f;
+
+
     Rigidbody _rb = null;           //get reference to ship's rigidbody
     ParticleSystem fireLeft = null; //get reference to fire particles
+    ParticleSystem.MainModule main;
     bool postToggle = true;         //used to toggle fire left and right
+    float fireSize = 2f;
+    float firePostion = 2f;
 
     public bool shieldActive = false;
+    public bool speedActive = false;
+
+    Color normalFire = Color.cyan;
+    Color speedFire = Color.yellow;
 
     public AudioClip shieldBump;
-    public AudioClip explode;
     public AudioSource  _audioPlayer;
-    bool playBump = false;//, playExplode = false;
+    bool playBump = false;
+    public bool canMove = true;
 
     private void Awake()
     {
@@ -54,6 +68,9 @@ public class PlayerShip : MonoBehaviour
         _rb = GetComponent<Rigidbody>();
         fireLeft = GetComponent<ParticleSystem>();
 
+        main = GetComponent<ParticleSystem>().main;
+        main.startColor = normalFire;
+
         _audioPlayer = GetComponent<AudioSource>();
         if (_audioPlayer == null)
             _audioPlayer = gameObject.AddComponent<AudioSource>();
@@ -61,8 +78,11 @@ public class PlayerShip : MonoBehaviour
 
     void FixedUpdate()
     {
-        MoveShip();
-        TurnShip();
+        if (canMove)
+        {
+            MoveShip();
+            TurnShip();
+        }
 
         //play audio
         if (playBump)
@@ -70,22 +90,17 @@ public class PlayerShip : MonoBehaviour
             playBump = false;
             _audioPlayer.PlayOneShot(shieldBump, .5f);
         }
-        /*if (playExplode)
-        {
-            playExplode = false;
-            _audioPlayer.PlayOneShot(explode, 1f);
-        }*/
 
         //duplicate fire particle for dual engine action!
         var fireLeftShape = fireLeft.shape;
         if (postToggle)
         {
-            fireLeftShape.position = new Vector3(.65f, .5f, -2f);
+            fireLeftShape.position = new Vector3(.65f, .5f, -firePostion);
             postToggle = false;
         }
         else
         {
-            fireLeftShape.position = new Vector3(-.65f, .5f, -2f);
+            fireLeftShape.position = new Vector3(-.65f, .5f, -firePostion);
             postToggle = true;
         }
     }
@@ -94,6 +109,9 @@ public class PlayerShip : MonoBehaviour
     {
         //Scale by move speed. (S = -1, W = 1, None = 0)
         float moveAmountThisFrame = Input.GetAxisRaw("Vertical") * _moveSpeed;
+        if (Input.GetAxisRaw("Vertical") < 0) //half speed if reversing
+            moveAmountThisFrame *= .5f;
+
         //combine direction with our calculated amount
         Vector3 moveDirection = transform.forward * moveAmountThisFrame;
         //apply movement to the physics object
@@ -131,6 +149,7 @@ public class PlayerShip : MonoBehaviour
 
     public void Kill(bool environment) //only kill if it hits unfriendly cube
     {
+        
         if (environment)
         {
             if (!shieldActive) //player hit cube with no shield
@@ -141,7 +160,13 @@ public class PlayerShip : MonoBehaviour
             else
             {
                 Debug.Log("Player Shield Hit!");
-                ShieldUp(false);
+                //ShieldUp(false);
+                playBump = true;
+
+                //bounce player back
+                Vector3 velo = _rb.velocity;
+                //apply movement to the physics object
+                _rb.velocity = velo * -_blowBack;
             }
         }
         else
@@ -156,7 +181,6 @@ public class PlayerShip : MonoBehaviour
                 Debug.Log("Hit enemy!");
                 playBump = true;
             }
-            
         }
     }
 
@@ -175,12 +199,10 @@ public class PlayerShip : MonoBehaviour
         if (blast)
         {
             //Debug.Log("fire engines");
-            //fireLeftShape.radius = 4f;
-            fireLeftShape.scale = new Vector3(2.5f, 0.2f, 10f);
+            fireLeftShape.scale = new Vector3(fireSize, 0.2f, 10f);
         }
         else
         {
-            //fireLeftShape.radius = 1f;
             fireLeftShape.scale = new Vector3(0.2f, 0.2f, 10f);
         }
     }
@@ -228,5 +250,41 @@ public class PlayerShip : MonoBehaviour
             //call ShieldController
             _shield.TurnOn(false);
         }
+    }
+
+    public void SpeedUp(bool gottaBlast)
+    {
+        if (gottaBlast)
+        {
+            Debug.Log("Gotta go fast!");
+            _gameController.speedElasped = 0f;
+            _gameController.playSpeedBoost = true;
+            speedActive = true;
+            main.startColor = speedFire;
+
+            fireSize *= 1.4f;
+            firePostion += .5f;
+
+            _moveSpeed = _spUpAmount * _moveSpeed; //increase move speed by variable
+            _turnSpeed += _turnSpeed * 0.5f;
+        }
+        else
+        {
+            Debug.Log("No need for speed");
+            speedActive = false;
+            main.startColor = normalFire;
+
+            fireSize /= 1.4f;
+            firePostion -= .5f;
+
+            _moveSpeed = 12f;
+            _turnSpeed = 3f;
+        }
+    }
+
+    //////EARN POINTS
+    public void PointGet()
+    {
+        _gameController.addScore();
     }
 }

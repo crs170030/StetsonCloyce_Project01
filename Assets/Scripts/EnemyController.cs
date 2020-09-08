@@ -15,6 +15,7 @@ public class EnemyController : MonoBehaviour
         {
             //murdertime epic (false since not environment)
             playerShip.Kill(false);
+            //playerShip.Kill();
         }
     }
 }
